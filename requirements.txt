@@ -1,0 +1,6 @@
+Python 3.10.12
+Pip version: 22.0.2
+python-telegram-bot==13.13
+dotenv
+PyYAML
+git
