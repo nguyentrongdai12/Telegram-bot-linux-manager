@@ -7,23 +7,23 @@ from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, Callb
 import re
 
 load_dotenv()
-# Lấy mã thông báo API từ biến môi trường
+
 TOKEN = os.getenv("BOT_TOKEN")
 CHATID = os.getenv("CHAT_ID")
 HELP = os.getenv("HELP_FILE")
 SHELL = os.getenv("SHELL_CONFIG")
 COMMAND_NAME, COMMAND_SHELL, CONFIRM_DELETE  = range(3)
 
-# Hàm bắt đầu /start
+
 def start(update: Update, context: CallbackContext) -> None:
     update.message.reply_text('Welcome, command basic\n- /help: Show this help message\n- /list_commands: Show the list of configured commands')
 
-# Hàm đọc nội dung của file help.txt
+
 def read_help_content():
     with open(HELP, 'r', encoding='utf-8') as file:
         return file.read()
 
-# Đọc các lệnh từ file YAML
+
 def load_commands():
     with open(SHELL, 'r') as file:
         commands = yaml.safe_load(file)
@@ -31,7 +31,7 @@ def load_commands():
 
 commands = load_commands()
 
-# Hàm phản hồi tin nhắn văn bản
+
 def run(update: Update, context: CallbackContext) -> None:
     matched_command = commands.get(update.message.text.lstrip('/'))
     if matched_command:
@@ -43,7 +43,7 @@ def run(update: Update, context: CallbackContext) -> None:
     else:
         update.message.reply_text("Command not found !!")
 
-# Hàm xử lý lệnh /help
+
 def help_command(update: Update, context: CallbackContext) -> None:
     help_text = read_help_content()
     update.message.reply_text(help_text)
@@ -55,18 +55,18 @@ def ls(update: Update, context: CallbackContext) -> None:
     else:
         update.message.reply_text("Empty command in config !!")
 
-# Bắt đầu quá trình thêm lệnh mới
+
 def add_command(update: Update, context: CallbackContext) -> int:
     update.message.reply_text('Command Name:')
     return COMMAND_NAME
 
-# Nhận tên lệnh từ người dùng
+
 def get_command_name(update: Update, context: CallbackContext) -> int:
     context.user_data['command_name'] = update.message.text
     update.message.reply_text('Command Detail:')
     return COMMAND_SHELL
 
-# Nhận shell command từ người dùng và lưu vào file YAML
+
 def get_command_shell(update: Update, context: CallbackContext) -> int:
     command_name = context.user_data['command_name']
     command_shell = update.message.text
@@ -78,7 +78,7 @@ def get_command_shell(update: Update, context: CallbackContext) -> int:
     update.message.reply_text(f'Command: "{command_name}" added with command shell: "{command_shell}"')
     return ConversationHandler.END
 
-# Hủy quá trình thêm lệnh
+
 def cancel(update: Update, context: CallbackContext) -> int:
     update.message.reply_text('Cancelled !!.')
     return ConversationHandler.END
@@ -116,19 +116,16 @@ def restart(update: Update, context: CallbackContext) -> None:
     process = subprocess.Popen('systemctl restart telegram-bot-manager', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     process.communicate()
 
-# Thiết lập bot
+
 def main() -> None:
     print("Service is running")
     bot = Bot(token=TOKEN)
     bot.send_message(chat_id=CHATID, text="Bot started !!!")
-
-    # Tạo Updater và gắn mã thông báo bot
+   
     updater = Updater(TOKEN)
-
-    # Nhận Dispatcher để đăng ký các trình xử lý
+   
     dispatcher = updater.dispatcher
 
-    # Thêm ConversationHandler cho /add_command
     add_conv_handler = ConversationHandler(
         entry_points=[CommandHandler('add', add_command)],
         states={
@@ -149,19 +146,16 @@ def main() -> None:
 
     dispatcher.add_handler(add_conv_handler)
     dispatcher.add_handler(del_conv_handler)
-    # Trình xử lý cho các lệnh /start và /help
+    
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("list", ls))
     dispatcher.add_handler(CommandHandler("restart", restart))
 
-    # Trình xử lý tin nhắn văn bản (lặp lại tin nhắn người dùng)
     dispatcher.add_handler(MessageHandler(Filters.text & Filters.command, run))
 
-    # Bắt đầu bot
     updater.start_polling()
 
-    # Chạy bot cho đến khi người dùng dừng nó
     updater.idle()
 
 if __name__ == '__main__':
