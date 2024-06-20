@@ -1,0 +1,11 @@
+Welcome to the Bot Help!
+Here are the commands you can use:
+/start - Start interacting with the bot.
+/restart - Restart bot if you want
+/help - Show this help message.
+/list - Show the list of configured commands.
+/add - Add your custom command
+/del - Delete your custom command
+/<command> - Execute the specified configured shell command.
+
+*Note: Please reply to the bot if it asks you the next question after the command
